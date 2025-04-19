@@ -24,19 +24,11 @@ user_memory = {}
 def get_model_buttons():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ChatGPT 3.5 Turbo", callback_data="model:gpt-3.5")],
-        [InlineKeyboardButton("⚠️ Claude 3 Opus ⚠️", callback_data="model:claude")],
         [InlineKeyboardButton("Gemini Pro", callback_data="model:gemini")]
     ])
 
 # === AI FUNCTION ===
 async def get_codegenus_reply(user_input, model_name):
-    if model_name == "claude":
-        return (
-            "⚠️ Claude 3 Opus is currently unavailable.\n\n"
-            "Please choose a different model:\n\n"
-            "⬇️ Available Models:\n- ChatGPT 3.5 Turbo\n- Gemini Pro"
-        )
-
     router_model_map = {
         "gpt-3.5": "openai/gpt-3.5-turbo",
         "gemini": "google/gemini-pro"
@@ -84,16 +76,10 @@ async def handle_model_selection(update: Update, context: ContextTypes.DEFAULT_T
     user_id = query.from_user.id
     model_key = query.data.split(":")[1]
 
-    if model_key == "claude":
-        await query.edit_message_text(
-            "⚠️ Claude 3 Opus is currently unavailable.\nPlease choose another model:",
-            reply_markup=get_model_buttons()
-        )
-    else:
-        user_model_choice[user_id] = model_key
-        await query.edit_message_text(
-            f"✅ Model changed to: {model_key.upper().replace('-', ' ')}\n\nNow you can chat with me or ask for HTML/CSS/JS help!"
-        )
+    user_model_choice[user_id] = model_key
+    await query.edit_message_text(
+        f"✅ Model changed to: {model_key.upper().replace('-', ' ')}\n\nNow you can chat with me or ask for HTML/CSS/JS help!"
+    )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
