@@ -10,7 +10,7 @@ from telegram.ext import (
 
 # === CONFIG ===
 TELEGRAM_BOT_TOKEN = "7776293126:AAF0VbXvzQ0H86EI0ThIejNHRfi89yEW2ME"
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 
 # === LOGGING ===
 logging.basicConfig(level=logging.INFO)
@@ -22,13 +22,21 @@ user_memory = {}
 
 # === MODEL BUTTONS ===
 def get_model_buttons():
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup([ 
         [InlineKeyboardButton("ChatGPT 3.5 Turbo", callback_data="model:gpt-3.5")],
+        [InlineKeyboardButton("⚠️ Claude 3 Opus ⚠️", callback_data="model:claude")],
         [InlineKeyboardButton("Gemini Pro", callback_data="model:gemini")]
     ])
 
 # === AI FUNCTION ===
 async def get_codegenus_reply(user_input, model_name):
+    if model_name == "claude":
+        return (
+            "⚠️ Claude 3 Opus is currently unavailable.\n\n"
+            "Please choose a different model:\n\n"
+            "⬇️ Available Models:\n- ChatGPT 3.5 Turbo\n- Gemini Pro"
+        )
+
     router_model_map = {
         "gpt-3.5": "openai/gpt-3.5-turbo",
         "gemini": "google/gemini-pro"
@@ -76,10 +84,16 @@ async def handle_model_selection(update: Update, context: ContextTypes.DEFAULT_T
     user_id = query.from_user.id
     model_key = query.data.split(":")[1]
 
-    user_model_choice[user_id] = model_key
-    await query.edit_message_text(
-        f"✅ Model changed to: {model_key.upper().replace('-', ' ')}\n\nNow you can chat with me or ask for HTML/CSS/JS help!"
-    )
+    if model_key == "claude":
+        await query.edit_message_text(
+            "⚠️ Claude 3 Opus is currently unavailable.\nPlease choose another model:",
+            reply_markup=get_model_buttons()
+        )
+    else:
+        user_model_choice[user_id] = model_key
+        await query.edit_message_text(
+            f"✅ Model changed to: {model_key.upper().replace('-', ' ')}\n\nNow you can chat with me or ask for HTML/CSS/JS help!"
+        )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
