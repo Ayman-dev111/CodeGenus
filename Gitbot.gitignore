@@ -1,0 +1,24 @@
+# Ignore the bot code file containing sensitive information
+CodeGenus.py
+
+# Ignore environment configuration files
+.env
+
+# Ignore any other files that may contain sensitive data like keys, tokens, or config files
+bot_config.py
+keys.env
+
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore virtual environments
+venv/
+.venv/
+
+# Ignore log files
+*.log
+
+# Ignore other possible sensitive files (customize as needed)
+*.env
