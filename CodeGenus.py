@@ -9,29 +9,33 @@ from telegram.ext import (
 # === CONFIG ===
 TELEGRAM_BOT_TOKEN = "7776293126:AAHS9xEauPhSRzw5sBRP9XN2oihU1TwBLHU"
 OPENROUTER_API_KEY = "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"
-DEVSTRAL_MODEL = "mistralai/devstral-2512:free"  # Free Devstral 2 model
 
 # === LOGGING ===
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # === MEMORY ===
+# Stores full conversation history per user
 user_memory = {}
 
 # === AI FUNCTION ===
-async def get_codegenus_reply(user_input):
+async def get_codegenus_reply(user_id, user_input):
     system_prompt = (
         "You are CodeGenus, a helpful and friendly assistant created by @Aumious. "
         "You can chat naturally, answer questions like a human, and when needed, help users with HTML, CSS, or JavaScript. "
         "Only provide code in those 3 languages. Avoid Python, Java, or any other programming languages."
     )
 
+    # Build message history
+    messages = [{"role": "system", "content": system_prompt}]
+    if user_id in user_memory:
+        for msg in user_memory[user_id]:
+            messages.append({"role": "user", "content": msg})
+    messages.append({"role": "user", "content": user_input})
+
     payload = {
-        "model": DEVSTRAL_MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input}
-        ]
+        "model": "deepseek/deepseek-v3.2",  # switched to DeepSeek V3.2
+        "messages": messages
     }
 
     headers = {
@@ -66,7 +70,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     waiting = await update.message.reply_text("🤔 Thinking...")
 
-    reply = await get_codegenus_reply(text)
+    reply = await get_codegenus_reply(user_id, text)
     await waiting.edit_text(reply)
 
 # === MAIN ===
@@ -76,5 +80,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🤖 CodeGenus (Devstral 2) is running...")
+    print("🤖 CodeGenus is running with DeepSeek V3.2...")
     app.run_polling()
