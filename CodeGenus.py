@@ -1,5 +1,6 @@
 import logging
 import aiohttp
+import asyncio
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder, ContextTypes,
@@ -15,8 +16,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # === MEMORY ===
-# Stores full conversation history per user
-user_memory = {}
+user_memory = {}  # Stores conversation history per user
+MAX_MEMORY = 15   # Keep last 15 messages per user
+
+# === SESSION ===
+session = aiohttp.ClientSession()
 
 # === AI FUNCTION ===
 async def get_codegenus_reply(user_id, user_input):
@@ -34,7 +38,7 @@ async def get_codegenus_reply(user_id, user_input):
     messages.append({"role": "user", "content": user_input})
 
     payload = {
-        "model": "deepseek/deepseek-v3.2",  # switched to DeepSeek V3.2
+        "model": "deepseek/deepseek-v3.2",
         "messages": messages
     }
 
@@ -43,12 +47,15 @@ async def get_codegenus_reply(user_id, user_input):
         "Content-Type": "application/json"
     }
 
-    async with aiohttp.ClientSession() as session:
+    try:
         async with session.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers) as resp:
             if resp.status != 200:
                 return f"⚠️ API Error: {resp.status}"
             data = await resp.json()
             return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        logger.error(f"API request failed: {e}")
+        return "⚠️ Something went wrong while contacting the AI. Please try again."
 
 # === HANDLERS ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,7 +73,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id not in user_memory:
         user_memory[user_id] = []
+
     user_memory[user_id].append(text)
+    # Trim memory to last MAX_MEMORY messages
+    if len(user_memory[user_id]) > MAX_MEMORY:
+        user_memory[user_id] = user_memory[user_id][-MAX_MEMORY:]
 
     waiting = await update.message.reply_text("🤔 Thinking...")
 
@@ -81,4 +92,7 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("🤖 CodeGenus is running with DeepSeek V3.2...")
-    app.run_polling()
+    try:
+        app.run_polling()
+    finally:
+        asyncio.run(session.close())
