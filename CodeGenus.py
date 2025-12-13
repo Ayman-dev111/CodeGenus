@@ -10,7 +10,7 @@ from telegram.ext import (
 
 # === CONFIG (REPLACE THESE TWO VALUES ONLY) ===
 TELEGRAM_BOT_TOKEN = "7776293126:AAHS9xEauPhSRzw5sBRP9XN2oihU1TwBLHU"
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "sk-or-v1-c9a423d4d9a99d8094f0006b0e62fd5f5c97f13e456becdd455046e4c9996b5d3"
 
 # === LOGGING ===
 logging.basicConfig(level=logging.INFO)
