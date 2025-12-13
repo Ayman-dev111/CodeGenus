@@ -9,6 +9,7 @@ from telegram.ext import (
 # === CONFIG ===
 TELEGRAM_BOT_TOKEN = "7776293126:AAHS9xEauPhSRzw5sBRP9XN2oihU1TwBLHU"
 OPENROUTER_API_KEY = "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"
+DEVSTRAL_MODEL = "mistralai/devstral-2512:free"  # Free Devstral 2 model
 
 # === LOGGING ===
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +27,7 @@ async def get_codegenus_reply(user_input):
     )
 
     payload = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": DEVSTRAL_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_input}
@@ -75,5 +76,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🤖 CodeGenus is running...")
+    print("🤖 CodeGenus (Devstral 2) is running...")
     app.run_polling()
