@@ -8,9 +8,9 @@ from telegram.ext import (
     MessageHandler, CallbackQueryHandler, filters
 )
 
-# === CONFIG ===
-TELEGRAM_BOT_TOKEN = "7776293126:AAF0VbXvzQ0H86EI0ThIejNHRfi89yEW2ME"
-OPENROUTER_API_KEY = "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"
+# === CONFIG (REPLACE THESE TWO VALUES ONLY) ===
+TELEGRAM_BOT_TOKEN = "7776293126:AAHS9xEauPhSRzw5sBRP9XN2oihU1TwBLHU"
+OPENROUTER_API_KEY = "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"
 
 # === LOGGING ===
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,7 @@ user_memory = {}
 
 # === MODEL BUTTONS ===
 def get_model_buttons():
-    return InlineKeyboardMarkup([ 
+    return InlineKeyboardMarkup([
         [InlineKeyboardButton("ChatGPT 3.5 Turbo", callback_data="model:gpt-3.5")],
         [InlineKeyboardButton("⚠️ Claude 3 Opus ⚠️", callback_data="model:claude")],
         [InlineKeyboardButton("Gemini Pro", callback_data="model:gemini")]
@@ -43,7 +43,7 @@ async def get_codegenus_reply(user_input, model_name):
     }
 
     system_prompt = (
-        "You are CodeGenus, a helpful and friendly assistant created by @Aymaniiiii. "
+        "You are CodeGenus, a helpful and friendly assistant created by @Aumious. "
         "You can chat naturally, answer questions like a human, and when needed, help users with HTML, CSS, or JavaScript. "
         "Only provide code in those 3 languages. Avoid Python, Java, or any other programming languages."
     )
@@ -62,7 +62,11 @@ async def get_codegenus_reply(user_input, model_name):
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers) as resp:
+        async with session.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            json=payload,
+            headers=headers
+        ) as resp:
             if resp.status != 200:
                 return f"⚠️ API Error: {resp.status}"
             data = await resp.json()
@@ -92,7 +96,7 @@ async def handle_model_selection(update: Update, context: ContextTypes.DEFAULT_T
     else:
         user_model_choice[user_id] = model_key
         await query.edit_message_text(
-            f"✅ Model changed to: {model_key.upper().replace('-', ' ')}\n\nNow you can chat with me or ask for HTML/CSS/JS help!"
+            f"✅ Model changed to: {model_key.upper().replace('-', ' ')}"
         )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -105,12 +109,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_memory[user_id] = []
     user_memory[user_id].append(text)
 
-    waiting = await update.message.reply_text("🤔 Thinking...")
-
+    thinking = await update.message.reply_text("🤔 Thinking...")
     reply = await get_codegenus_reply(text, model)
-    await waiting.edit_text(reply)
+    await thinking.edit_text(reply)
 
-# === MAIN LOOP WITH AUTO-RECONNECT ===
+# === MAIN LOOP ===
 async def run_bot():
     while True:
         try:
@@ -121,10 +124,10 @@ async def run_bot():
             app.add_handler(CallbackQueryHandler(handle_model_selection))
             app.add_handler(MessageHandler(filters.COMMAND, start))
 
-            print("🤖 Bot is running...")
+            print("🤖 CodeGenus is running...")
             await app.run_polling()
         except Exception as e:
-            print(f"⚠️ Bot crashed with error: {e}\nRetrying in 5 seconds...")
+            print(f"⚠️ Crash: {e}. Restarting in 5s...")
             await asyncio.sleep(5)
 
 if __name__ == "__main__":
